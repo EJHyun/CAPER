@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import torch
 import pickle
 import time
@@ -11,23 +10,6 @@ from time_split_batch import time_split_graph
 from utils import print_metrics
 import model
 
-# +
-#pip install dgl==0.4.3
-
-# +
-# parser = argparse.ArgumentParser()
-# parser = argparse.ArgumentParser(description="Career Prediction")
-# parser.add_argument("--history_length", default=100, type=int, help="past length for RNNs")
-# parser.add_argument("--device", default="cuda:0", type=str, help="Which device do you wanna use")
-# parser.add_argument("--train_until", default=2015, type=int, help="")
-# parser.add_argument("--emb_dim", default=150, type=int, help="")
-# args = parser.parse_args()
-# -
-
-
-# train_until = args.train_until - 1968
-# history_length = args.history_length
-# device = args.device
 train_until = 2015 - 1968
 history_length = 100
 device = 'cuda:0'
@@ -35,9 +17,6 @@ scaling_factor = 9000
 random_seed = 1024
 random.seed(random_seed)
 torch.manual_seed(random_seed)
-print("train until:", train_until, train_until+1968)
-print("history lenght:", history_length)
-print("scaling_factor", scaling_factor)
 
 print("Loading data...")
 with open('longT_train_data.pickle', 'rb') as f:
@@ -111,9 +90,6 @@ past_companies = dict()
 for user in test_user_entid2:
     past_companies[user] = torch.unique(Train_Graph.in_edges(user, form = 'uv')[0]) - (user_id_max + 1)
 
-# label_jobs_index = dict()
-# for user in test_user_entid2:
-#     label_jobs_index[user] = list(user_future_jobs[user])
 label_jobs_index = defaultdict(dict)
 for user in test_user_entid2:
     tmp = list(user_future_jobs[user].keys())
@@ -122,24 +98,18 @@ for user in test_user_entid2:
     for time__ in tmp:
         label_jobs_index[user][time__] = torch.tensor(list(user_future_jobs[user][time__]))
 
-# emb_dim = args.emb_dim
 emb_dim = 150
 num_epochs = 100
 trainset_batch_size = 500
 test_batch_size = 500
 best_mrr = 0
 best_epoch = 0
-learning_rate = 0.01 # 원래 0.001
-
-print("Emb dim:", emb_dim)
-print("Batch_size:", trainset_batch_size)
-print("learning_rate:", learning_rate)
+learning_rate = 0.01
 
 model = model.GCRNN(User_cnt, Comp_cnt, Job_cnt*2, emb_dim, User_cnt-1, device)
 optimizer = torch.optim.Adam(model.parameters(), lr = learning_rate)
 print("Train start")
 for epoch in range(num_epochs):
-    print("-epoch: ", epoch,"/ 0 ~",num_epochs-1,"processing")
     model.train()
     prev_batch_cnt = 0
     batch_cnt = 0
@@ -152,9 +122,9 @@ for epoch in range(num_epochs):
         batch_size = batch_cnt - prev_batch_cnt
         comp_loss, job_loss = model(u[prev_batch_cnt:batch_cnt], train_comp_tensor[prev_batch_cnt:batch_cnt], train_job_tensor[prev_batch_cnt:batch_cnt], fact_train_start[prev_batch_cnt:batch_cnt], Train_Graph, splitted_Train_Graph, history_length, remove_list)
         loss = comp_loss + job_loss
-        loss.backward() # calculate gradient
-        optimizer.step() # update parameter via calculated gradient
-        optimizer.zero_grad() # initialize
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
     print("Test start")
     model.eval()
     k1 = 2
@@ -176,7 +146,7 @@ for epoch in range(num_epochs):
                 for user_id, UC_score, UJ_score in zip(test_user_entid2[prev_test_batch_cnt:test_batch_cnt], All_UC_score, All_UJ_score):
                     if len(label_comps_index[user_id][train_until + m]):
                         user_future_companies_index = label_comps_index[user_id][train_until + m]
-                        Company_label_scores = UC_score[user_future_companies_index] # 정답 회사들의 점수들을 뽑는 과정이다.
+                        Company_label_scores = UC_score[user_future_companies_index]
                         for cls_ in Company_label_scores:
                             gap = UC_score - cls_
                             past_gap = gap[past_companies[user_id]]
@@ -197,8 +167,6 @@ for epoch in range(num_epochs):
                 prev_test_batch_cnt = test_batch_cnt
             print("m = ", m)
             mrr, h1, h3, h5, h10 = print_metrics(company_ranks, job_ranks)
-            #=============================
-            #train_until+=1
             remove_list.append([])
             predicted_graph = Train_Graph.edge_subgraph(np.where(Train_Graph.edata['time_idx'] == -100)[0], preserve_nodes = True)
             predicted_graph.copy_from_parent()
@@ -207,12 +175,5 @@ for epoch in range(num_epochs):
             predicted_graph.add_edges(predicted_edges_u, predicted_edges_v)
             predicted_graph.edata['relation_idx'] = torch.tensor(rel_idx)
             splitted_Train_Graph.append(predicted_graph)
-    # if mrr > best_mrr:
-    #     best_epoch = epoch
-    #     best_mrr = mrr
-    # print("Best MRR:", best_mrr, "at epoch", best_epoch)
-
-
-CAPER
 
 
