@@ -4,20 +4,17 @@ import pickle
 import torch
 from tqdm import tqdm
 import numpy as np
-scaling_factor = 9000
 
-print("Initializing time_split_batch... with scaling factor",scaling_factor)
-
-with open('./top-'+str(scaling_factor)+'comps_quad.pickle', 'rb') as f:
+with open('/home/user/EJHyun/Career Prediction/long_term/quad.pickle', 'rb') as f:
     data = pickle.load(f)
 head_list_id, tail_list_id, relation_list_id, time_list_id, user_cnt, comp_cnt, job_cnt, time_cnt, app_times = data['data']
 entity_vocab, relation_vocab, time_vocab = list(range(user_cnt+comp_cnt)), list(range(job_cnt)), list(range(time_cnt))
 user_id_max = user_cnt-1
-with open('./top-'+str(scaling_factor)+'comps_neg_and_app.pickle', 'rb') as f:
+with open('/home/user/EJHyun/Career Prediction/long_term/neg_and_app.pickle', 'rb') as f:
     C_app_dict, J_app_dict, uc_dict, uj_dict, jc_dict, cj_dict, app_times = pickle.load(f)['data']
 
 def time_split_graph(train_until):
-    Total_Graph = load_graphs('./top-'+str(scaling_factor)+'comps_TKG.bin')[0][0]
+    Total_Graph = load_graphs('/home/user/EJHyun/Career Prediction/long_term/TKG.bin')[0][0]
     Time_span = len(time_vocab)
     time_mask = [time_ < train_until+1 for time_ in time_list_id]
     total_edge_index = list(range(len(time_list_id)*2))
@@ -51,9 +48,10 @@ def time_split(train_until, history_length, Train_Graph):
     train_quadruples_ids = list(map(lambda x: (x[0], x[1], x[2], x[3]), zip(train_head, train_relation, train_tail, train_time)))
     reciprocal_train_quadruples_ids = list(map(lambda x: (x[2], x[1] + len(relation_vocab), x[0], x[3]), zip(train_head, train_relation, train_tail, train_time)))
     train_quadruples_ids.extend(reciprocal_train_quadruples_ids)
+    # test_quadruples는 필요 없다.
     print("Listing test seeds...")
     test_user_seed = set()
-    test_comp_seed = list(map(lambda x: (x, train_until + 1), list(set(tail_list_id))))
+    test_comp_seed = list(map(lambda x: (x, train_until + 1), list(set(tail_list_id)))) # Company는 user랑 다르게 다 뽑아야함
     print("Making Labels...")
     user_future_companies = dict()
     user_future_jobs = dict()

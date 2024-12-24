@@ -24,6 +24,7 @@ def print_hms(time):
 
 def inner_product_score(a, b):
   return torch.sum(a * b, dim=-1) 
+# elementwise 곱 
 
 def hermitian_product_score(a, b):
   real_a, imaginary_a = torch.chunk(a, 2, dim=-1)
