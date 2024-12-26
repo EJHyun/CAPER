@@ -14,7 +14,7 @@ The same code is in https://github.com/Bigdasgit/CAPER
   title={CAPER: Enhancing Career Trajectory Prediction using Temporal Knowledge Graph and Ternary Relationship},
   booktitle={In Proceedings of the 31st {ACM} {SIGKDD} International Conference on Knowledge Discovery and Data Mining, Toronto, Ontario, Canada, August 3-7, 2025},
   pages={},
-  publisher={{ACM}}
+  publisher={{ACM}},
   year={2025},
   doi={10.1145/3690624.3709329},
   timestamp={},
